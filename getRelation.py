@@ -4,6 +4,8 @@ import sys
 count_Loc_From = {}
 count_Loc_To = {}
 count_Pair = {}
+count_Modi_From ={}
+count_Modi_To ={}
 
 def get_relation (fn, locmapping):
     
@@ -89,9 +91,26 @@ def get_relation (fn, locmapping):
     print "Translocation + Modifcation-type Changed (Multiple instances):", multiple_trans_mod_changed_type
     print "Unbinding:", unbiding_type
     '''
+    '''
     print count_Loc_From
     print count_Loc_To
     print count_Pair
+    '''
+    
+    a = [(v,k) for k, v, in count_Modi_From.iteritems()]
+    b = [(v,k) for k, v, in count_Modi_To.iteritems()]
+    a.sort();
+    b.sort()
+    for v, k in a:
+        print v, k 
+    print "============"
+    for v, k in b:
+	print v, k
+    '''   
+    print count_Modi_From
+    print count_Modi_To
+    '''
+
 #print relocation_type + modification_changed_type + trans_modif_changed_type + synthesis_type + only_control_type + binding_type + binding_more_type + binding_less_type + multiple_translocation_type + multiple_trans_mod_changed_type + unbiding_type
 def get_component (line):
     line = line.replace("\"","").replace(",","")
@@ -110,7 +129,7 @@ def get_type (consumed, produced, controls, mapping):
           fromLoc = mapping[con_arr[1]]
 	  toLoc = mapping[pro_arr[1]]
 	  pairLoc = fromLoc + " to " + toLoc
-          print consumed
+	  
 	  if fromLoc not in count_Loc_From:
 	     count_Loc_From[fromLoc] = 1
 	  else:
@@ -128,6 +147,25 @@ def get_type (consumed, produced, controls, mapping):
 
 	  return "translocation"
        elif con_arr[0] != pro_arr[0] and con_arr[1] == pro_arr[1]: # modification_changed
+          con = con_arr[0].split("-")
+	  pro = pro_arr[0].split("-")
+	  con = " ".join(con [1:])
+	  pro = " ".join(pro [1:])
+	  if len(con) == 0:
+	     con = "empty"
+	  if len(pro) == 0:
+	     pro = "empty"
+
+          if con not in count_Modi_From:
+	     count_Modi_From[con] = 1
+	  else:
+	     count_Modi_From[con] += 1
+
+	  if pro not in count_Modi_To:
+	     count_Modi_To[pro] = 1
+	  else:
+	     count_Modi_To[pro] += 1
+
 	  return "modification_changed"
        elif con_arr[0] != pro_arr[0] and con_arr[1] != pro_arr[1]: # translocation + modification_changed
 	  return "trans_modif_changed"
@@ -187,7 +225,6 @@ def get_type (consumed, produced, controls, mapping):
 	       pro_element.append(word)
 
        if sorted(con_element) == sorted (pro_element):
-	  
 	  return "unbiding"
     
 
