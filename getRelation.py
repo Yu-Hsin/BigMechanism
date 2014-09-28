@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 import sys
 
+count_Loc_From = {}
+count_Loc_To = {}
+count_Pair = {}
 
-def get_relation (fn):
+def get_relation (fn, locmapping):
     
+    mapping = {}
+    for line in open(locmapping):
+	line = line.rstrip().split()
+	mapping[line[0]] = line[1]
+
     f1 = open(fn)
     f1.readline() # read dummy line
 
@@ -39,7 +47,7 @@ def get_relation (fn):
 	    elif i == 5: #controls
 		contorls = get_component(line)
 
-	relation = get_type(consumed, produced, contorls) 
+	relation = get_type(consumed, produced, contorls, mapping) 
 
 	if relation == "translocation":
 	    relocation_type += 1
@@ -68,6 +76,7 @@ def get_relation (fn):
 	   break
 #print total
 
+    '''
     print "Translocation:", relocation_type
     print "Modification-type Changed:", modification_changed_type
     print "Translocation + Modfication-type Changed:", trans_modif_changed_type
@@ -79,7 +88,10 @@ def get_relation (fn):
     print "Translocation (Multiple instances):", multiple_translocation_type
     print "Translocation + Modifcation-type Changed (Multiple instances):", multiple_trans_mod_changed_type
     print "Unbinding:", unbiding_type
-
+    '''
+    print count_Loc_From
+    print count_Loc_To
+    print count_Pair
 #print relocation_type + modification_changed_type + trans_modif_changed_type + synthesis_type + only_control_type + binding_type + binding_more_type + binding_less_type + multiple_translocation_type + multiple_trans_mod_changed_type + unbiding_type
 def get_component (line):
     line = line.replace("\"","").replace(",","")
@@ -89,22 +101,35 @@ def get_component (line):
     else:
 	return line[3:-1]
 
-def get_type (consumed, produced, controls):
+def get_type (consumed, produced, controls, mapping):
     
     if len(consumed) == 1 and len(produced) == 1: # check translocation or modification changed
        con_arr = consumed[0].split("@")
        pro_arr = produced[0].split("@")
        if con_arr[0] == pro_arr[0] and con_arr[1] != pro_arr[1]: # translocation
+          fromLoc = mapping[con_arr[1]]
+	  toLoc = mapping[pro_arr[1]]
+	  pairLoc = fromLoc + " to " + toLoc
+          print consumed
+	  if fromLoc not in count_Loc_From:
+	     count_Loc_From[fromLoc] = 1
+	  else:
+	     count_Loc_From[fromLoc] += 1
+	  
+	  if toLoc not in count_Loc_To:
+	     count_Loc_To[toLoc] = 1
+	  else:
+	     count_Loc_To[toLoc] += 1
+
+	  if pairLoc not in count_Pair:
+	     count_Pair[pairLoc] = 1
+	  else:
+	     count_Pair[pairLoc] += 1
+
 	  return "translocation"
        elif con_arr[0] != pro_arr[0] and con_arr[1] == pro_arr[1]: # modification_changed
 	  return "modification_changed"
        elif con_arr[0] != pro_arr[0] and con_arr[1] != pro_arr[1]: # translocation + modification_changed
-          print "================"
-          print consumed
-	  print produced
-	  print controls
-	  print "========"
-
 	  return "trans_modif_changed"
      
     if len(consumed) == 0 and len(produced) != 0:
@@ -186,6 +211,7 @@ def get_type (consumed, produced, controls):
 	  return "multiple_translocation_modification_changed"
 
 if __name__ == "__main__":
-   get_relation(sys.argv[1])
+#get_relation(sys.argv[1])
+    get_relation(sys.argv[1], sys.argv[2]) # rules.json, locMapping
 
 
